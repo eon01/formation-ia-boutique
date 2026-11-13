@@ -1,0 +1,35 @@
+# La CI de la boutique : les tests, puis l'analyse de sécurité.
+name: CI
+
+# Quand lancer la CI : à chaque push sur main, et sur chaque pull request
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      # Récupère le code du dépôt
+      - uses: actions/checkout@v4
+      # Installe Python 3.12
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  bandit:
+    # Attend que le job "tests" ait réussi
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit
+      # Comme à l'étape 4, sans .venv à exclure sur le serveur.
+      # -ll : seules les alertes de gravité moyenne ou haute font échouer le job.
+      - run: bandit -q -r . -s B101 -ll
