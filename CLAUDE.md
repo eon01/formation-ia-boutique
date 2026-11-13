@@ -17,3 +17,10 @@ en SQLite, une page web Flask.
 - Toute nouvelle fonction arrive avec ses tests dans `test_*.py`.
 - Ne jamais modifier un test pour le faire passer :
   corriger le code à la place.
+
+## Commits
+
+- Format Conventional Commits : `type(portée): description`,
+  avec les types `feat`, `fix`, `test`, `docs`, `chore`, `build`.
+- La description tient en une ligne, au présent.
+- Le corps du message dit pourquoi le changement est fait.
