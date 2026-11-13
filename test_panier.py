@@ -26,3 +26,9 @@ def test_quantite_negative_refusee():
     articles = [{"nom": "stylo", "prix": 1.50, "quantite": -1}]
     with pytest.raises(ValueError):
         calculer_total(articles)
+
+
+def test_prix_negatif_refuse():
+    articles = [{"nom": "stylo", "prix": -1.50, "quantite": 1}]
+    with pytest.raises(ValueError):
+        calculer_total(articles)

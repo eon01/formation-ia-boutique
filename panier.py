@@ -10,6 +10,8 @@ def calculer_total(articles, code_promo=None):
     for article in articles:
         if article["quantite"] < 0:
             raise ValueError(f"Quantité négative pour {article['nom']}")
+        if article["prix"] < 0:
+            raise ValueError(f"Prix négatif pour {article['nom']}")
         total += article["prix"] * article["quantite"]
     # Un code absent ou inconnu donne une remise de 0.
     remise = CODES_PROMO.get(code_promo, 0)
