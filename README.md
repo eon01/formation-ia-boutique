@@ -5,7 +5,7 @@ Chaque tag `atelier-02` à `atelier-06` contient la boutique telle qu'elle doit 
 Pour remettre votre boutique dans cet état, sans perdre votre historique ni vos fichiers non suivis :
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eon01/formation-ia-boutique/outils/reinitialiser.sh -o /tmp/reinitialiser.sh
+curl -fsSL https://raw.githubusercontent.com/eon01/formation-ia-boutique/remise-a-zero/reinitialiser.sh -o /tmp/reinitialiser.sh
 bash /tmp/reinitialiser.sh 04
 ```
 
