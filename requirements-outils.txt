@@ -1,0 +1,6 @@
+# Outils du développeur, hors de l'application.
+presidio-analyzer
+presidio-anonymizer
+# preshed 3.0.14 empêche spaCy de charger ses modèles :
+# on garde la version précédente tant que ce n'est pas corrigé.
+preshed==3.0.13
