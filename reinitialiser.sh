@@ -8,11 +8,13 @@
 #   2. récupère l'état de référence de l'atelier (un tag Git)
 #   3. remplace les fichiers suivis par Git par ceux de la référence
 #   4. enregistre le changement dans un commit, par-dessus votre historique
-#   5. vérifie le résultat
+#   5. retire les fichiers que Git ne suit pas et n'ignore pas (ils restent
+#      dans la sauvegarde) : le dossier ressemble exactement à la référence
+#   6. vérifie le résultat
 #
 # Ce que le script ne fait jamais :
 #   - il ne supprime pas votre historique, vos branches ni votre lien vers GitHub
-#   - il ne touche pas aux fichiers non suivis par Git (.env, boutique.db...)
+#   - il ne touche pas aux fichiers ignorés par Git (.env, boutique.db, .venv...)
 #   - il ne pousse rien sur GitHub
 
 set -euo pipefail
@@ -117,6 +119,21 @@ else
     git "${OPTIONS_IDENTITE[@]}" commit --quiet --no-verify -m "Départ de l'atelier $ATELIER"
 fi
 
+# --- 5. Retirer les fichiers en trop --------------------------------------
+# Un fichier d'un essai précédent (score_fraude.py...) fausserait les tests.
+# Il est déjà copié dans la sauvegarde : on peut le retirer du dossier.
+# Les fichiers ignorés par Git (.env, boutique.db, .venv) ne bougent pas.
+
+FICHIERS_EN_TROP=$(git ls-files --others --exclude-standard)
+if [[ -n "$FICHIERS_EN_TROP" ]]; then
+    afficher_etape "Retrait des fichiers absents de $TAG (copiés dans la sauvegarde)"
+    echo "$FICHIERS_EN_TROP"
+    # Deux passes : un .gitignore retiré à la première passe (dans un dossier
+    # comme .serena/) peut laisser des fichiers qu'il cachait jusque-là.
+    git clean --quiet --force -d
+    git clean --quiet --force -d
+fi
+
 # --- Ce que Git ne suit pas ------------------------------------------------
 # On crée seulement ce qui manque. Un fichier qui existe déjà reste tel quel.
 
@@ -160,7 +177,7 @@ EOF
     fi
 fi
 
-# --- 5. Vérifier -----------------------------------------------------------
+# --- 6. Vérifier -----------------------------------------------------------
 
 afficher_etape "Vérification"
 NOMBRE_DE_FICHIERS=$(git ls-files | wc -l)
