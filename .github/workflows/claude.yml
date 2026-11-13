@@ -1,0 +1,77 @@
+# Le nom du workflow, tel qu'il s'affiche dans l'onglet "Actions" de GitHub
+name: Claude Code
+
+# Les événements qui réveillent le workflow
+on:
+  # Un nouveau commentaire sur une issue ou sur une pull request
+  issue_comment:
+    types: [created]
+  # Un nouveau commentaire accroché à une ligne de code dans une pull request
+  pull_request_review_comment:
+    types: [created]
+  # Une issue qui vient d'être ouverte, ou assignée à quelqu'un
+  issues:
+    types: [opened, assigned]
+  # Une revue de pull request qui vient d'être envoyée
+  pull_request_review:
+    types: [submitted]
+
+# Les tâches à lancer : ici, une seule, appelée "claude"
+jobs:
+  claude:
+    # Le filtre : la tâche ne tourne que si le texte contient "@claude".
+    # Sans ce filtre, chaque commentaire du dépôt lancerait l'agent
+    # et consommerait votre quota.
+    # Chaque ligne vérifie le bon champ selon l'événement :
+    # le commentaire, le texte de la revue, ou le titre et le texte de l'issue.
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    # La machine qui exécute la tâche : un Linux prêté par GitHub,
+    # neuf à chaque run, effacé à la fin
+    runs-on: ubuntu-latest
+    # Les droits du jeton GitHub du workflow : lecture seule sur le code,
+    # les pull requests et les issues. Les commits et les commentaires
+    # de l'agent passent par l'application Claude installée sur le dépôt.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      # Permet au workflow de prouver son identité à l'application Claude,
+      # qui lui donne en échange un jeton pour écrire dans le dépôt
+      id-token: write
+      # Permet à l'agent de lire les résultats des autres workflows (la CI)
+      actions: read
+    # Les étapes, exécutées dans l'ordre
+    steps:
+      # Étape 1 : copier le dépôt sur la machine.
+      # fetch-depth: 1 ne récupère que le dernier commit : c'est plus rapide.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Étape 2 : lancer Claude Code, avec l'action officielle d'Anthropic.
+      # L'agent lit le commentaire qui l'a appelé, et le CLAUDE.md du dépôt.
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Le jeton de votre abonnement Claude, rangé dans les secrets
+          # du dépôt par /install-github-app. Il n'apparaît jamais en clair.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Donne aussi à l'agent le droit de lire les résultats de la CI
+          additional_permissions: |
+            actions: read
+
+          # Les lignes suivantes sont commentées, donc inactives.
+          # prompt fixe une consigne toujours la même, au lieu de suivre
+          # le texte du commentaire qui a appelé l'agent.
+          # prompt: 'Update the pull request description to include a summary of changes.'
+
+          # claude_args passe des options à Claude Code, par exemple
+          # la liste des commandes que l'agent a le droit de lancer.
+          # claude_args: '--allowed-tools Bash(gh pr *)'
