@@ -1,0 +1,13 @@
+{
+  "sandbox": {
+    "enabled": true
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./boutique.db)",
+      "Bash(sqlite3 *)"
+    ]
+  }
+}
